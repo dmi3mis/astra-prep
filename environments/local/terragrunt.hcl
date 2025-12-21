@@ -5,7 +5,13 @@ include "root" {
 
 terraform {
   source = "../../terraform"
-  # source = "git://git@github.com/dmi3mis/astra-prep.git/terraform"
+  # https://notes.kodekloud.com/docs/Terragrunt-for-Beginners/Terragrunt-Modules/Sourcing-a-Module-From-a-Git-Repository
+  # Prerequisites
+  #   - A Terraform module stored in a private Git repository
+  #   - Credentials configured in your local environment (HTTPS token or SSH key)
+  #   - Terraform CLI installed on your workstation
+  #
+  #  source = "https://github.com/dmi3mis/astra-prep.git//terraform"
 
 }
 
@@ -13,7 +19,7 @@ locals {
   # Enviroment name
   environment         = "local"
   libvirt_uri         = "qemu:///system"
-
+  ssh_public_key  = "~/.ssh/id_ecdsa.pub"
   # uncomment this block when computer not local
   # nessesary preparations
   #  1. ssh-keygen -t ecdsa -f ~/.ssh/id_ecdsa -N ""
