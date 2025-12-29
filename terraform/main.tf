@@ -100,7 +100,7 @@ module "role_vms" {
   for_each        = var.role_vm_config
   source          = "./modules/libvirt-vm"
   pool_name       = libvirt_pool.vmspool.name
-  basevolume_path = libvirt_volume.dc_baseimage.path
+  basevolume_path = libvirt_volume.role_baseimage.path
   vm_name         = each.key
   vcpus           = each.value.vcpus
   memory          = each.value.memory
@@ -121,7 +121,7 @@ module "client_vms" {
   for_each        = var.client_vm_config
   source          = "./modules/libvirt-vm"
   pool_name       = libvirt_pool.vmspool.name
-  basevolume_path = libvirt_volume.dc_baseimage.path
+  basevolume_path = libvirt_volume.client_baseimage.path
   vm_name         = each.key
   vcpus           = each.value.vcpus
   memory          = each.value.memory

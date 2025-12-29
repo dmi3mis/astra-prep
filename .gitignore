@@ -51,7 +51,7 @@ terraform.rc
 
 # tf lock file
 **/.terraform.lock.hcl
-
+**/.terragrunt-cache/
 # Crash log files
 crash.log
 

@@ -12,5 +12,5 @@ remote_state {
 
 # Глобальные переменные для всех окружений
 inputs = {
-  ssh_public_key  = "~/.ssh/id_ecdsa.pub"
+
 }

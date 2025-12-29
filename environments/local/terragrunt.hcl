@@ -12,20 +12,9 @@ terraform {
   #   - Terraform CLI installed on your workstation
   #
   #  source = "https://github.com/dmi3mis/astra-prep.git//terraform"
-
 }
 
 locals {
-  # Enviroment name
-  environment         = "local"
-  libvirt_uri         = "qemu:///system"
-  ssh_public_key  = "~/.ssh/id_ecdsa.pub"
-  # uncomment this block when computer not local
-  # nessesary preparations
-  #  1. ssh-keygen -t ecdsa -f ~/.ssh/id_ecdsa -N ""
-  #  2. ssh-copy-id -i ~/.ssh/id_ecdsa.pub
-  # environment        = "remote"
-  # libvirt_uri = "qemu+ssh://<remote-user-here>@remote-host-here:<ssh-port>/system?known_hosts=~/.ssh/known_hosts&sshauth=privkey&keyfile=~/.ssh/id_ecdsa&no_verify=1"
 
   
   # terraform будет загружать образы ALSE отсюда https://registry.astralinux.ru/ui/native/mg-generic/alse/
@@ -55,13 +44,32 @@ inputs = {
   # Каталог пула виртуальных машин
   pool_path           = "/var/lib/libvirt/images/pool"
   
+  ssh_public_key      = "~/.ssh/id_ecdsa.pub"
+
 
   # Образ ОС DC замените на путь к вашему образу, список приведён выше
   # образ должен быть в формате qcow2 и включать поддержку cloud-init
-
   dcimage_url        = "${local.image_urls["alse178_gui_local"]}"
   roleimage_url      = "${local.image_urls["alse178_gui_local"]}"
   clientimage_url    = "${local.image_urls["alse178_gui_local"]}"
+
+  # Enviroment name
+  environment         = "local"
+  libvirt_uri         = "qemu:///system"
+  
+  # uncomment this block when computer not local
+  # nessesary preparations
+  #  1. ssh-keygen -t ecdsa -f ~/.ssh/id_ecdsa -N ""
+  #  2. ssh-copy-id -i ~/.ssh/id_ecdsa.pub
+  # environment        = "remote"
+  # libvirt_uri = "qemu+ssh://<remote-user-here>@remote-host-here:<ssh-port>/system?known_hosts=~/.ssh/known_hosts&sshauth=privkey&keyfile=~/.ssh/id_ecdsa&no_verify=1"
+  
+  # environment = "remote"
+  # libvirt_uri = "qemu+ssh://user@192.168.50.211:22/system?known_hosts=~/.ssh/known_hosts&sshauth=privkey&keyfile=~/.ssh/id_ecdsa&no_verify=1"
+
+
+
+
 
   # Список имен и конфигураций контрорллеров домена
   dc_vm_config = {
@@ -178,7 +186,7 @@ inputs = {
     "client1.ald.test"  = { 
        ip               = "192.168.101.202"
        gateway          = "192.168.101.1"
-       mac              = "52:54:00:a8:65:cb"
+       mac              = "52:54:00:a8:65:ca"
        disk_size        = 50 * pow(2, 30)
        network_name     = "headoffice"
        adminpassword    = "password"
@@ -188,7 +196,7 @@ inputs = {
     "client2.ald.test"  = { 
        ip               = "10.11.0.123"
        gateway          = "10.11.0.1"
-       mac              = "52:54:00:a8:65:ca"
+       mac              = "52:54:00:0b:00:7b"
        disk_size        = 50 * pow(2, 30)
        network_name     = "branch"
        adminpassword    = "password"

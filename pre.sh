@@ -60,7 +60,6 @@ ssh-keygen -t ecdsa -f ~/.ssh/id_ecdsa -N ""
 # Мы будем использовать диаппазон портов 5900-6000/tcp для vnc подключения к виртуальным машинам.
 # разрешим удалённые подключения через них
 sudo firewall-cmd --permanent --add-port 5900-9000/tcp
-
 sudo firewall-cmd --reload
 
 
@@ -105,7 +104,7 @@ terragrunt version
 
 sudo apt-get install -y git mkisofs
 
-# Pre-download qcow2 files is needed if you use local version in terraform scenario.
+# Pre-download qcow2 file.
 
 sudo wget https://registry.astralinux.ru/artifactory/mg-generic/alse/cloudinit/alse-gui-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2 \
           -O /var/lib/libvirt/images/alse-gui-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2
@@ -117,3 +116,20 @@ sudo chgrp libvirt-qemu -R /var/lib/libvirt/images/
 sudo apt-get install -y docker docker-compose-v2
 sudo usermod -a -G docker $USER
 
+
+
+sudo bash -c 'cat << EOF >> /etc/hosts
+192.168.101.201   dc01.ald.test     dc01
+192.168.101.202   dc02.ald.test     dc02
+10.11.0.201       dc03.ald.test     dc03
+192.168.101.211   client1.ald.test  client1
+10.11.0.202       dhcp.ald.test     dhcp
+192.168.101.205   ps.ald.test       ps
+192.168.101.210   monitor.ald.test  monitor
+192.168.101.203   log.ald.test      log
+192.168.101.206   fs.ald.test       fs
+192.168.101.207   repo.ald.test     repo
+10.11.0.203       os.ald.test       os
+192.168.101.215   ws1.msad.test     ws1
+192.168.101.216   w10.msad.test     w10
+EOF'

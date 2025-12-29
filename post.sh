@@ -125,12 +125,14 @@ virt-install \
  --pxe \
  --boot bootmenu.enable=on,hd,network \
  --disk path=/var/lib/libvirt/images/pxeboot-bios.qcow2,size=50,bus=virtio,format=qcow2 \
- --network network=headoffice,model=virtio,mac="52:54:00:a8:65:01" \
+ --network network=branch,model=virtio,mac="52:54:00:a8:65:01" \
  --video virtio \
  --console pty,target.type=virtio \
  --graphics spice,port=5971,listen="0.0.0.0" \
  --noautoconsole
 
+
+# create UEFI PXE boot VM with secureboot bisabled
 virt-install \
  --name pxeboot-uefi.ald.test \
  --ram 2046 \
@@ -140,11 +142,16 @@ virt-install \
  --pxe \
  --install bootdev=net,no_install=yes \
  --disk path=/var/lib/libvirt/images/pxeboot-uefi.qcow2,size=50,bus=virtio,format=qcow2 \
- --network network=headoffice,model=virtio,mac="52:54:00:a8:65:02" \
+ --network network=branch,model=virtio,mac="52:54:00:a8:65:02" \
  --video virtio \
- --graphics spice,port=5972,listen="0.0.0.0" \
  --console pty,target.type=virtio \
- --noautoconsole
+ --noautoconsole --print-xml > /tmp/pxeboot-uefi.xml
+
+sed -i 's/secure=yes/secure=no/g' /tmp/pxeboot-uefi.xml
+virsh define /tmp/pxeboot-uefi.xml
+rm /tmp/pxeboot-uefi.xml
+
+
 
 
 virsh shutdown ws1.msad.test
