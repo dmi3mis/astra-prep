@@ -113,7 +113,7 @@ sudo chgrp libvirt-qemu -R /var/lib/libvirt/images/
 
 
 # install docker. we will need it in ./post.sh
-sudo apt-get install -y docker docker-compose-v2
+sudo apt-get install -y docker.io docker-compose-v2
 sudo usermod -a -G docker $USER
 
 
