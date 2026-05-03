@@ -5,7 +5,7 @@ provider "libvirt" {
 
 # Чтение публичного SSH ключа
 locals {
-  ssh_public_key = file(var.ssh_public_key)
+  ssh_key = file(var.ssh_public_key)
 }
 
 
@@ -92,7 +92,7 @@ module "dc_vms" {
   adminpassword   = each.value.adminpassword
   network_name    = each.value.network_name
   vncport         = each.value.vncport
-  ssh_public_key  = var.ssh_public_key
+  ssh_public_key  = local.ssh_key
 
 }
 
@@ -113,7 +113,7 @@ module "role_vms" {
   adminpassword   = each.value.adminpassword
   network_name    = each.value.network_name
   vncport         = each.value.vncport
-  ssh_public_key  = var.ssh_public_key  
+  ssh_public_key  = local.ssh_key
   depends_on      = [module.dc_vms]
 }
 
@@ -134,7 +134,7 @@ module "client_vms" {
   adminpassword   = each.value.adminpassword
   network_name    = each.value.network_name
   vncport         = each.value.vncport
-  ssh_public_key  = var.ssh_public_key    
+  ssh_public_key  = local.ssh_key  
   depends_on      = [module.role_vms]
 }
 
