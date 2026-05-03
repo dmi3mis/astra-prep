@@ -22,6 +22,10 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
     prefer_fqdn_over_hostname: true
     create_hostname_file: true
     manage_etc_hosts: true
+    bootcmd:
+      - echo nameserver 8.8.8.8 > /etc/resolv.conf
+    runcmd:
+      - systemctl restart networking
     users:
       - name: ${var.adminlogin}
         ssh_authorized_keys:
@@ -36,12 +40,13 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
     apt:
       sources:
         aldpro:
-          source: "deb https://dl.astralinux.ru/aldpro/frozen/01/2.4.2/ 1.7_x86-64 main base"
+          source: "deb https://dl.astralinux.ru/aldpro/frozen/01/3.2.1/ 1.7_x86-64 main base"
     packages:
       - firefox
       - chromium
       - bash-completion
       - spice-vdagent
+      - resolvconf
     package_update: true
     package_reboot_if_required: true
     apt_pipelining: false
@@ -52,6 +57,10 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
     growpart:
       mode: auto
       devices: ['/']
+    manage_resolv_conf: true
+    resolv_conf:
+      domain: ald.test
+      nameservers: [8.8.8.8, 8.8.4.4]
   EOF
   network_config = <<-EOF
     #network-config
@@ -197,7 +206,15 @@ resource "libvirt_domain" "vm" {
         bus="0" 
         port="2"
       }
-    }]
+    },{
+      type = "unix"
+      target = {
+        virt_io = {
+        name = "org.qemu.guest_agent.0"
+        }
+      }
+    }
+    ]
 
     videos = [{
         model = {
