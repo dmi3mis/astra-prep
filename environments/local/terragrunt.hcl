@@ -184,9 +184,9 @@ inputs = {
   # Список имен и конфигураций клиентских систем
   client_vm_config = {
     "client1.ald.test"  = { 
-       ip               = "192.168.101.202"
+       ip               = "192.168.101.211"
        gateway          = "192.168.101.1"
-       mac              = "52:54:00:a8:65:ca"
+       mac              = "52:54:00:a8:65:d3"
        disk_size        = 50 * pow(2, 30)
        network_name     = "headoffice"
        adminpassword    = "password"
