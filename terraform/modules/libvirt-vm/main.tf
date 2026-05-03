@@ -13,7 +13,7 @@ resource "libvirt_volume" "vm_disk" {
 resource "libvirt_cloudinit_disk" "cloudinit" {
   name = "${var.vm_name}-cloudinit"
   meta_data = yamlencode({
-    instance-id    = "test"
+    instance-id    = "${var.vm_name}-cloudinit"
     local-hostname = "${var.vm_name}"
   })
   user_data      = <<-EOF
