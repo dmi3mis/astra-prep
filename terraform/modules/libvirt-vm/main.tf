@@ -14,7 +14,6 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
   name = "${var.vm_name}-cloudinit"
   meta_data = yamlencode({
     instance-id    = "test"
-    local-hostname = "${var.vm_name}"
   })
   user_data      = <<-EOF
     #cloud-config
@@ -22,6 +21,11 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
     prefer_fqdn_over_hostname: true
     create_hostname_file: true
     manage_etc_hosts: true
+    preserve_hostname: false
+    bootcmd:
+      - echo nameserver 8.8.8.8 > /etc/resolv.conf
+    runcmd:
+      - systemctl restart networking
     users:
       - name: ${var.adminlogin}
         ssh_authorized_keys:
