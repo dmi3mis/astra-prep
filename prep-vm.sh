@@ -16,7 +16,7 @@ search ald.test
 EOF'
 
 set +o history
-sudo /opt/rbta/aldpro/client/bin/aldpro-client-installer --domain ald.test --account admin --password password --host $(hostname)  --gui --force
+sudo /opt/rbta/aldpro/client/bin/aldpro-client-installer --domain ald.test --account admin --password password --host $(hostname --short)  --gui --force
 set -o history
 
 sudo reboot
