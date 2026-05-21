@@ -9,6 +9,8 @@ sudo bash -c 'cat << EOF > /etc/libvirt/hooks/qemu
 /usr/sbin/iptables -F LIBVIRT_FWO
 /usr/sbin/iptables -A LIBVIRT_FWO -j ACCEPT
 /usr/sbin/iptables -A LIBVIRT_FWI -j ACCEPT
+/usr/sbin/iptables -t nat -I LIBVIRT_PRT -s 192.168.101.0/24 -d 10.11.0.0/24 -j RETURN
+/usr/sbin/iptables -t nat -I LIBVIRT_PRT -d 192.168.101.0/24 -s 10.11.0.0/24 -j RETURN
 EOF'
 
 sudo chmod a+rx /etc/libvirt/hooks/qemu
