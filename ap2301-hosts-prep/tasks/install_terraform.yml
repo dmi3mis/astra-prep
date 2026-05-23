@@ -1,0 +1,46 @@
+---
+- name: Создание каталога ~/.local/bin
+  ansible.builtin.file:
+    path: "{{ home_dir }}/.local/bin"
+    state: directory
+    mode: '0755'
+
+- name: Скачивание Terraform
+  ansible.builtin.get_url:
+    url: "https://hashicorp-releases.yandexcloud.net/terraform/{{ terraform_version }}/terraform_{{ terraform_version }}_linux_amd64.zip"
+    dest: "/tmp/terraform_{{ terraform_version }}_linux_amd64.zip"
+    mode: '0644'
+
+- name: Распаковка Terraform
+  ansible.builtin.unarchive:
+    src: "/tmp/terraform_{{ terraform_version }}_linux_amd64.zip"
+    dest: "{{ home_dir }}/.local/bin/"
+    remote_src: true
+    creates: "{{ home_dir }}/.local/bin/terraform"
+
+- name: Установка прав на выполнение terraform
+  ansible.builtin.file:
+    path: "{{ home_dir }}/.local/bin/terraform"
+    mode: '0755'
+
+- name: Удаление zip-архива Terraform
+  ansible.builtin.file:
+    path: "/tmp/terraform_{{ terraform_version }}_linux_amd64.zip"
+    state: absent
+
+- name: Создание конфигурации .terraformrc (mirror Yandex)
+  ansible.builtin.copy:
+    dest: "{{ home_dir }}/.terraformrc"
+    content: |
+      provider_installation {
+        network_mirror {
+          url = "https://terraform-mirror.yandexcloud.net/"
+          include = ["registry.terraform.io/*/*"]
+        }
+        direct {
+          exclude = ["registry.terraform.io/*/*"]
+        }
+      }
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    mode: '0644'

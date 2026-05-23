@@ -1,0 +1,32 @@
+---
+- name: Скачивание Terragrunt
+  ansible.builtin.get_url:
+    url: "https://github.com/gruntwork-io/terragrunt/releases/download/{{ terragrunt_version }}/terragrunt_linux_amd64.zip"
+    dest: "/tmp/terragrunt_{{ terragrunt_version }}_linux_amd64.zip"
+    mode: '0644'
+
+- name: Распаковка Terragrunt
+  ansible.builtin.unarchive:
+    src: "/tmp/terragrunt_{{ terragrunt_version }}_linux_amd64.zip"
+    dest: "{{ home_dir }}/.local/bin/"
+    remote_src: true
+    creates: "{{ home_dir }}/.local/bin/terragrunt"
+
+- name: Переименование исполняемого файла (если unarchive создал terragrunt_linux_amd64)
+  ansible.builtin.shell: |
+    if [ -f "{{ home_dir }}/.local/bin/terragrunt_linux_amd64" ]; then
+      mv "{{ home_dir }}/.local/bin/terragrunt_linux_amd64" "{{ home_dir }}/.local/bin/terragrunt"
+    fi
+  args:
+    executable: /bin/bash
+  changed_when: false
+
+- name: Установка прав на выполнение terragrunt
+  ansible.builtin.file:
+    path: "{{ home_dir }}/.local/bin/terragrunt"
+    mode: '0755'
+
+- name: Удаление zip-архива Terragrunt
+  ansible.builtin.file:
+    path: "/tmp/terragrunt_{{ terragrunt_version }}_linux_amd64.zip"
+    state: absent
