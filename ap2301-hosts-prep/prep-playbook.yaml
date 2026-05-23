@@ -1,0 +1,334 @@
+---
+# ssh-keygen -t ecdsa -f ~/.ssh/id_ecdsa -N ""
+# ANSIBLE_CONFIG=./ansible.cfg ansible all -m ansible.posix.authorized_key -b -K -k -u astra -a "key={{lookup('file','~/.ssh/id_ecdsa.pub')}} user=astra"
+# ANSIBLE_CONFIG=./ansible.cfg ansible all -m lineinfile -a "path=/etc/sudoers \
+# regexp='^%astra-admin\s+ALL=\(ALL:ALL\)\s+ALL' line='%astra-admin    ALL=(ALL:ALL) NOPASSWD: ALL'\
+#  validate='/usr/sbin/visudo -cf %s'" --become -k -K
+# ANSIBLE_CONFIG=./ansible.cfg ansible all -m ansible.builtin.shell -b -K -k \
+#  -u astra -a "echo 'astra ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/astra && chmod 0440 /etc/sudoers.d/astra"
+# sudo scp ./alse-gui-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2 192.168.50.159:~/
+# ssh 192.168.50.159 sudo rsync -P alse-gui-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2 /var/lib/libvirt/images
+
+- name: Настройка удалённых компьютеров для курса AP2301
+  hosts: ap2301-hosts
+  become: true
+  vars_files:
+    - ./prep-vars.yaml
+  tasks:
+
+    # 1. Настройка репозиториев Astra Linux
+    - name: Комментирование активных строк репозиториев
+      ansible.builtin.shell: |
+        sed -i '/^deb\s/s/^/#/' /etc/apt/sources.list
+
+    - name: Добавление репозитория (main) через apt_repository
+      ansible.builtin.apt_repository:
+        repo: "deb https://download.astralinux.ru/astra/frozen/1.8_x86-64/1.8.4/repository-main/ 1.8_x86-64 main contrib non-free non-free-firmware"
+        state: present
+        filename: repository-main
+        update_cache: false
+
+    - name: Добавление репозитория (extended) через apt_repository
+      ansible.builtin.apt_repository:
+        repo: "deb https://download.astralinux.ru/astra/frozen/1.8_x86-64/1.8.4/repository-extended/ 1.8_x86-64 main contrib non-free non-free-firmware"
+        state: present
+        filename: repository-extended
+        update_cache: false
+
+    - name: Обновление кэша
+      ansible.builtin.apt:
+        update_cache: true
+
+    # 2. Переключение режима Astra Linux в "Орёл" (отключение мандатного контроля)
+    - name: Проверка текущего режима astra-modeswitch
+      ansible.builtin.command: astra-modeswitch get
+      register: modeswitch_status
+      changed_when: false
+
+    - name: Выполнение astra-modeswitch set 0
+      ansible.builtin.command:
+        cmd: /usr/sbin/astra-modeswitch set 0
+      when: modeswitch_status.stdout | trim != '0'
+
+    # 3. Установка необходимых пакетов
+    - name: Установка пакетов (виртуализация, RDP, SSH, утилиты, Docker)
+      ansible.builtin.apt:
+        name:
+          - astra-kvm
+          - virt-manager
+          - openssh-server
+          - fly-dm-rdp
+          - xrdp
+          - git
+          - mkisofs
+          - docker.io
+          - docker-compose-v2
+        state: present
+        install_recommends: true
+
+    # 4. Добавление пользователя в группы
+    - name: Добавление текущего пользователя в необходимые группы
+      ansible.builtin.user:
+        name: "{{ user }}"
+        groups:
+          - libvirt-admin
+          - libvirt-qemu
+          - libvirt
+          - disk
+          - kvm
+          - astra-admin
+          - astra-console
+          - docker
+        append: true
+
+    # 5. Настройка firewalld (открытие портов и сервисов)
+    - name: Запуск и включение firewalld
+      ansible.builtin.systemd:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: Открытие сервисов rdp и ssh в firewall
+      ansible.posix.firewalld:
+        service: "{{ item }}"
+        permanent: true
+        immediate: true
+        state: enabled
+      loop:
+        - rdp
+        - ssh
+
+    - name: Открытие диапазона портов 5900-9000/tcp
+      ansible.posix.firewalld:
+        port: "5900-9000/tcp"
+        permanent: true
+        immediate: true
+        state: enabled
+
+    # 6. Настройка SSH-сервера (совместимость со старыми клиентами)
+    - name: Создание каталога sshd_config.d
+      ansible.builtin.file:
+        path: /etc/ssh/sshd_config.d
+        state: directory
+        mode: '0755'
+
+    - name: Добавление конфигурации для поддержки ssh-rsa
+      ansible.builtin.copy:
+        dest: /etc/ssh/sshd_config.d/custom.conf
+        content: |
+          HostkeyAlgorithms +ssh-rsa
+          PubkeyAcceptedKeyTypes +ssh-rsa
+        owner: root
+        group: root
+        mode: '0644'
+      notify: Restart ssh
+
+
+    - name: Create libvirt hook to interconnect 2 nat networks
+      ansible.builtin.file:
+        path: /etc/libvirt/hooks
+        state: directory
+        recurse: true
+        owner: root
+        group: root
+
+    - name: Add sshd config
+      ansible.builtin.copy:
+        dest: /etc/libvirt/hooks/qemu
+        mode: "0755"
+        content: |
+          #!/bin/bash
+          iptables -F LIBVIRT_FWI
+          iptables -F LIBVIRT_FWO
+          iptables -A LIBVIRT_FWI -j ACCEPT
+          iptables -A LIBVIRT_FWO -j ACCEPT
+          iptables -t nat -I LIBVIRT_PRT -s 192.168.101.0/24 -d 10.11.0.0/24 -j RETURN
+          iptables -t nat -I LIBVIRT_PRT -d 192.168.101.0/24 -s 10.11.0.0/24 -j RETURN
+
+    # 12.  ---- Настройка Tuned для производительности виртуализации ----
+    - name: Проверка установки пакета tuned-ppd
+      ansible.builtin.command: dpkg-query -W tuned-ppd
+      register: tuned_ppd_pkg
+      failed_when: false
+      changed_when: false
+
+    - name: Остановка и маскировка сервиса tuned-ppd (если есть)
+      ansible.builtin.systemd:
+        name: tuned-ppd
+        state: stopped
+        masked: true
+      when: tuned_ppd_pkg.rc == 0
+
+    - name: Установка пакета tuned
+      ansible.builtin.apt:
+        name: tuned
+        state: present
+
+    - name: Активация профиля virtual-host
+      ansible.builtin.command: tuned-adm profile virtual-host
+      register: tuned_profile
+      changed_when: "'already used' not in tuned_profile.stdout"
+
+    - name: Включение и запуск tuned
+      ansible.builtin.systemd:
+        name: tuned
+        state: started
+        enabled: true
+
+    # 12. Предварительная загрузка qcow2 образа
+    # ---- Блок загрузки qcow2 с проверкой MD5 и прогресс-баром ----
+    - name: Скачивание файла контрольной суммы .md5
+      ansible.builtin.get_url:
+        url: "{{ qcow2_url }}.md5"
+        dest: "/tmp/qcow2.md5"
+        mode: '0644'
+      register: md5_file_download
+
+    - name: Чтение ожидаемой MD5 из файла
+      ansible.builtin.slurp:
+        src: "/tmp/qcow2.md5"
+      register: md5_content
+
+    - name: Установка факта expected_md5 (первое слово в файле)
+      ansible.builtin.set_fact:
+        expected_md5: "{{ (md5_content.content | b64decode).split()[0] }}"
+
+    - name: Проверка существования qcow2 образа
+      ansible.builtin.stat:
+        path: "{{ qcow2_dest }}"
+      register: qcow2_stat
+
+    - name: Вычисление MD5 существующего qcow2 (если файл есть)
+      ansible.builtin.shell: "md5sum {{ qcow2_dest }} | awk '{print $1}'"
+      register: current_md5
+      when: qcow2_stat.stat.exists
+      ignore_errors: true
+
+    - name: Удаление битого/неправильного qcow2 (если MD5 не совпадает)
+      ansible.builtin.file:
+        path: "{{ qcow2_dest }}"
+        state: absent
+      when:
+        - qcow2_stat.stat.exists
+        - current_md5.stdout is defined
+        - current_md5.stdout != expected_md5
+
+    - name: Скачивание qcow2 образа с прогресс-баром (если файла нет или он был удалён)
+      ansible.builtin.shell: |
+        wget --show-progress -O {{ qcow2_dest }} {{ qcow2_url }}
+      args:
+        executable: /bin/bash
+        creates: "{{ qcow2_dest }}"   # не скачивает повторно, если файл появился (но после удаления его нет)
+      register: download_result
+      when: not qcow2_stat.stat.exists or (qcow2_stat.stat.exists and current_md5.stdout != expected_md5)
+
+    - name: Финальная проверка MD5 загруженного файла
+      ansible.builtin.shell: "md5sum {{ qcow2_dest }} | awk '{print $1}'"
+      register: final_md5
+
+    - name: Валидация контрольной суммы
+      ansible.builtin.fail:
+        msg: "Ошибка: MD5 загруженного qcow2 не совпадает с ожидаемым (ожидалось: {{ expected_md5 }}, получено: {{ final_md5.stdout }})"
+      when: final_md5.stdout != expected_md5
+
+    - name: Изменение владельца образа для группы libvirt-qemu
+      ansible.builtin.file:
+        path: /var/lib/libvirt/images
+        state: directory
+        owner: root
+        group: libvirt-qemu
+        recurse: true
+
+    - name: Изменение владельца образа для группы libvirt-qemu
+      ansible.builtin.file:
+        path: /var/lib/libvirt/images
+        state: directory
+        owner: root
+        group: libvirt-qemu
+        recurse: true
+
+    # 12. Добавление статических записей в /etc/hosts
+    - name: Добавление записей в /etc/hosts
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        block: |
+          192.168.101.201   dc01.ald.test     dc01
+          192.168.101.202   dc02.ald.test     dc02
+          10.11.0.201       dc03.ald.test     dc03
+          192.168.101.211   client1.ald.test  client1
+          10.11.0.202       dhcp.ald.test     dhcp
+          192.168.101.205   ps.ald.test       ps
+          192.168.101.210   monitor.ald.test  monitor
+          192.168.101.203   log.ald.test      log
+          192.168.101.206   fs.ald.test       fs
+          192.168.101.207   repo.ald.test     repo
+          10.11.0.203       os.ald.test       os
+          192.168.101.215   ws1.msad.test     ws1
+          192.168.101.216   w10.msad.test     w10
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - ASTRA HOSTS"
+        insertafter: EOF
+        state: present
+
+  handlers:
+    - name: Restart ssh
+      ansible.builtin.systemd:
+        name: ssh
+        state: restarted
+
+
+- name: Установка terragrunt и terraform
+  hosts: ap2301-hosts
+  become: false
+  vars_files:
+    - ./prep-vars.yaml
+  tasks:
+    # 8. Настройка PATH и переменной LIBVIRT_DEFAULT_URI в .bashrc
+    - name: Добавление ~/.local/bin в PATH
+      ansible.builtin.lineinfile:
+        path: "{{ home_dir }}/.bashrc"
+        line: 'export PATH=${PATH}:${HOME}/.local/bin'
+        regexp: '^export PATH=.*\.local/bin'
+        state: present
+
+    - name: Добавление LIBVIRT_DEFAULT_URI
+      ansible.builtin.lineinfile:
+        path: "{{ home_dir }}/.bashrc"
+        line: 'export LIBVIRT_DEFAULT_URI="qemu:///system"'
+        regexp: '^export LIBVIRT_DEFAULT_URI='
+        state: present
+
+    # ---- Генерация SSH-ключа ECDSA (если отсутствует) ----
+    - name: Создание каталога .ssh (если не существует)
+      ansible.builtin.file:
+        path: "{{ home_dir }}/.ssh"
+        state: directory
+        mode: '0700'
+        owner: "{{ user }}"
+        group: "{{ user }}"
+
+    - name: Генерация SSH-ключа ECDSA (без пароля)
+      ansible.builtin.command: ssh-keygen -t ecdsa -f {{ home_dir }}/.ssh/id_ecdsa -N ""
+      args:
+        creates: "{{ home_dir }}/.ssh/id_ecdsa"
+
+    # ---- Проверка наличия Terraform ----
+    - name: Проверка существования исполняемого файла terraform (желтый цвет, если отсутствует)
+      ansible.builtin.stat:
+        path: "{{ home_dir }}/.local/bin/terraform"
+      register: terraform_bin
+      changed_when: not terraform_bin.stat.exists
+
+    - name: Установка Terraform (если отсутствует)
+      ansible.builtin.import_tasks: tasks/install_terraform.yml
+      when: not terraform_bin.stat.exists
+
+    # ---- Проверка наличия Terragrunt ----
+    - name: Проверка существования исполняемого файла terragrunt (желтый цвет, если отсутствует)
+      ansible.builtin.stat:
+        path: "{{ home_dir }}/.local/bin/terragrunt"
+      register: terragrunt_bin
+      changed_when: not terragrunt_bin.stat.exists
+
+    - name: Установка Terragrunt (если отсутствует)
+      ansible.builtin.import_tasks: tasks/install_terragrunt.yml
+      when: not terragrunt_bin.stat.exists

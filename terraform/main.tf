@@ -134,7 +134,7 @@ module "client_vms" {
   adminpassword   = each.value.adminpassword
   network_name    = each.value.network_name
   vncport         = each.value.vncport
-  ssh_public_key  = local.ssh_key  
+  ssh_public_key  = local.ssh_key
   depends_on      = [module.role_vms]
 }
 

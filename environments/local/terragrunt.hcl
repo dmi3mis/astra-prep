@@ -25,11 +25,13 @@ locals {
   image_urls = {
     debian12_local         = "/var/lib/libvirt/images/debian-12-genericcloud-amd64.qcow2"
     debian12_link          = "https://cdimage.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
-
+     
     alse178_local          = "/var/lib/libvirt/images/alse-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2"
     alse178_link           = "https://registry.astralinux.ru/artifactory/mg-generic/alse/cloudinit/alse-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2"
     alse178_gui_local      = "/var/lib/libvirt/images/alse-gui-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2"
     alse178_gui_link       = "https://registry.astralinux.ru/artifactory/mg-generic/alse/cloudinit/alse-gui-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2"
+    alse1710_gui_local      = "/var/lib/libvirt/images/alse-gui-1.7.10-max-cloudinit-mg16.2.0-amd64.qcow2"
+    alse1710_gui_link      = "https://registry.astralinux.ru/artifactory/mg-generic/alse/cloudinit/alse-gui-1.7.10-max-cloudinit-mg16.2.0-amd64.qcow2"
     }
   
 
@@ -49,9 +51,9 @@ inputs = {
 
   # Образ ОС DC замените на путь к вашему образу, список приведён выше
   # образ должен быть в формате qcow2 и включать поддержку cloud-init
-  dcimage_url        = "${local.image_urls["alse178_gui_local"]}"
-  roleimage_url      = "${local.image_urls["alse178_gui_local"]}"
-  clientimage_url    = "${local.image_urls["alse178_gui_local"]}"
+  dcimage_url        = "${local.image_urls["alse1710_gui_local"]}"
+  roleimage_url      = "${local.image_urls["alse1710_gui_local"]}"
+  clientimage_url    = "${local.image_urls["alse1710_gui_local"]}"
 
   # Enviroment name
   environment         = "local"
@@ -74,8 +76,8 @@ inputs = {
   # Список имен и конфигураций контрорллеров домена
   dc_vm_config = {
     "dc01.ald.test"  = { 
-       vcpus            = 3          # 1 is default value
-       memory           = 5120       # 2048 is default value
+       vcpus            = 4          # 1 is default value
+       memory           = 8192       # 2048 is default value
        ip               = "192.168.101.201"
        gateway          = "192.168.101.1"
        mac              = "52:54:00:a8:65:c9"
@@ -86,8 +88,8 @@ inputs = {
        vncport          = 5921
        }
     "dc02.ald.test"  = { 
-       vcpus            = 3
-       memory           = 5120
+       vcpus            = 4
+       memory           = 8192
        ip               = "192.168.101.202"
        gateway          = "192.168.101.1"
        mac              = "52:54:00:a8:65:ca"
@@ -99,8 +101,8 @@ inputs = {
        vncport          = 5922
        }
     "dc03.ald.test"  = { 
-       vcpus            = 3
-       memory           = 5120
+       vcpus            = 4
+       memory           = 8192
        ip               = "10.11.0.201"
        gateway          = "10.11.0.1"
        mac              = "52:54:00:0b:00:c9"
@@ -117,7 +119,7 @@ inputs = {
   role_vm_config = {
     "dhcp.ald.test"     = { 
        vcpus            = 1
-       memory           = 2048  
+       memory           = 2048
        ip               = "10.11.0.202"
        gateway          = "10.11.0.1"
        mac              = "52:54:00:0b:00:ca"

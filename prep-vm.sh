@@ -20,4 +20,3 @@ sudo /opt/rbta/aldpro/client/bin/aldpro-client-installer --domain ald.test --acc
 set -o history
 
 sudo reboot
-
