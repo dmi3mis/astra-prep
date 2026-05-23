@@ -11,17 +11,16 @@
 export DEBIAN_FRONTEND="noninteractive"
 
 
-cat  <<'EOF' |sudo tee /etc/apt/sources.list
-deb https://download.astralinux.ru/astra/stable/1.8_x86-64/repository-extended/ 1.8_x86-64 main contrib non-free non-free-firmware
-deb https://download.astralinux.ru/astra/stable/1.8_x86-64/repository-main/ 1.8_x86-64 main contrib non-free non-free-firmware
-EOF
+# Мы будем использовать Astra Linux SE Орёл 1.8.4
 
-sudo apt-get update
-sudo astra-update -T -a -r
+cat  <<'EOF' |sudo tee /etc/apt/sources.list
+deb https://download.astralinux.ru/astra/frozen/1.8_x86-64/1.8.4/repository-extended/ 1.8_x86-64 main contrib non-free non-free-firmware
+deb https://download.astralinux.ru/astra/frozen/1.8_x86-64/1.8.4/repository-main/ 1.8_x86-64 main contrib non-free non-free-firmware
+EOF
 
 # Включаем режим Орёл. Возможности SE нам не понадобятся.
 
-#sudo astra-modeswitch set 0
+sudo astra-modeswitch set 0
 
 
 #sudo systemctl stop ufw
@@ -37,8 +36,8 @@ sudo usermod -a -G libvirt-admin,libvirt-qemu,libvirt,disk,kvm,astra-admin,astra
 
 # Disable Apparmor security on libvirtd
 # not applicable on Astra Linux SE
-sudo sh -c 'echo security_driver = \"none\" >> /etc/libvirt/qemu.conf'
-sudo systemctl restart libvirtd
+# sudo sh -c 'echo security_driver = \"none\" >> /etc/libvirt/qemu.conf'
+# sudo systemctl restart libvirtd
 
 # Установим xrdp и openssh-server разрешим к нему удалённые подключения
 sudo apt-get install -y openssh-server fly-dm-rdp xrdp
@@ -53,6 +52,9 @@ HostkeyAlgorithms +ssh-rsa
 PubkeyAcceptedKeyTypes +ssh-rsa
 EOF'
 sudo systemctl restart ssh.service
+
+
+# SSH ключ нам понадобится при развёртывании виртуальных машин.
 
 ssh-keygen -t ecdsa -f ~/.ssh/id_ecdsa -N ""
 
@@ -106,14 +108,14 @@ sudo apt-get install -y git mkisofs
 
 # Pre-download qcow2 file.
 
-sudo wget https://registry.astralinux.ru/artifactory/mg-generic/alse/cloudinit/alse-gui-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2 \
-          -O /var/lib/libvirt/images/alse-gui-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2
+sudo wget https://registry.astralinux.ru/artifactory/mg-generic/alse/cloudinit/alse-gui-1.7.10-max-cloudinit-mg16.2.0-amd64.qcow2 \
+          -O /var/lib/libvirt/images/alse-gui-1.7.10-max-cloudinit-mg16.2.0-amd64.qcow2
 
 sudo chgrp libvirt-qemu -R /var/lib/libvirt/images/
 
 
 # install docker. we will need it in ./post.sh
-sudo apt-get install -y docker docker-compose-v2
+sudo apt-get install -y docker.io docker-compose-v2
 sudo usermod -a -G docker $USER
 
 
