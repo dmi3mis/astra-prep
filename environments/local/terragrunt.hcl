@@ -75,150 +75,82 @@ inputs = {
 
   # Список имен и конфигураций контрорллеров домена
   dc_vm_config = {
-    "dc01.ald.test"  = { 
+    "dc-1.ald.company.com"  = { 
        vcpus            = 4          # 1 is default value
        memory           = 8192       # 2048 is default value
-       ip               = "192.168.101.201"
-       gateway          = "192.168.101.1"
-       mac              = "52:54:00:a8:65:c9"
-       network_name     = "headoffice"
+       ip               = "10.0.1.11"
+       gateway          = "10.0.1.1"
+       mac              = "52:54:00:00:01:0b"
+       network_name     = "exam-net"
        disk_size        = 50 * pow(2, 30)
-       adminlogin       = "sa"
-       adminpassword    = "password"
+       adminlogin       = "localadmin"
+       adminpassword    = "P@ssw0rd"
        vncport          = 5921
-       }
-    "dc02.ald.test"  = { 
-       vcpus            = 4
-       memory           = 8192
-       ip               = "192.168.101.202"
-       gateway          = "192.168.101.1"
-       mac              = "52:54:00:a8:65:ca"
-       network_name     = "headoffice"
-       adminpassword    = "password"
-       disk_size        = 50 * pow(2, 30)
-       adminlogin       = "sa"
-       adminpassword    = "password"
-       vncport          = 5922
-       }
-    "dc03.ald.test"  = { 
-       vcpus            = 4
-       memory           = 8192
-       ip               = "10.11.0.201"
-       gateway          = "10.11.0.1"
-       mac              = "52:54:00:0b:00:c9"
-       network_name     = "branch"
-       adminpassword    = "password"
-       disk_size        = 50 * pow(2, 30)
-       adminlogin       = "sa"
-       adminpassword    = "password"
-       vncport          = 5923
        }
   }
 
   # Список имен и конфигураций подсистем домена
   role_vm_config = {
-    "dhcp.ald.test"     = { 
-       vcpus            = 1
-       memory           = 2048
-       ip               = "10.11.0.202"
-       gateway          = "10.11.0.1"
-       mac              = "52:54:00:0b:00:ca"
+    "dhcp-1.ald.company.com"  = { 
+       vcpus            = 4          # 1 is default value
+       memory           = 4092       # 2048 is default value
+       ip               = "10.0.1.30"
+       gateway          = "10.0.1.1"
+       mac              = "52:54:00:00:01:1e"
+       network_name     = "exam-net"
        disk_size        = 50 * pow(2, 30)
-       network_name     = "branch"
-       adminpassword    = "password"
+       adminlogin       = "localadmin"
+       adminpassword    = "P@ssw0rd"
+       vncport          = 5930
+       }
+    "file-1.ald.company.com"  = { 
+       vcpus            = 4          # 1 is default value
+       memory           = 4092       # 2048 is default value
+       ip               = "10.0.1.24"
+       gateway          = "10.0.1.1"
+       mac              = "52:54:00:00:01:18"
+       network_name     = "exam-net"
+       disk_size        = 50 * pow(2, 30)
+       adminlogin       = "localadmin"
+       adminpassword    = "P@ssw0rd"
        vncport          = 5931
        }
-    "ps.ald.test"       = { 
-       ip               = "192.168.101.205"
-       gateway          = "192.168.101.1"
-       mac              = "52:54:00:a8:65:cd"
+    "audit-1.ald.company.com"  = { 
+       vcpus            = 4          # 1 is default value
+       memory           = 4092       # 2048 is default value
+       ip               = "10.0.1.22"
+       gateway          = "10.0.1.1"
+       mac              = "52:54:00:00:01:16"
+       network_name     = "exam-net"
        disk_size        = 50 * pow(2, 30)
-       network_name     = "headoffice"
+       adminlogin       = "localadmin"
+       adminpassword    = "P@ssw0rd"
        vncport          = 5932
-       }
-    "monitor.ald.test"  = { 
-       ip               = "192.168.101.210"
-       gateway          = "192.168.101.1"
-       mac              = "52:54:00:a8:65:d2"
-       disk_size        = 50 * pow(2, 30)
-       network_name     = "headoffice"
-       adminpassword    = "password"
-       vncport          = 5933
-       }
-    "log.ald.test"      = { 
-       ip               = "192.168.101.203"
-       gateway          = "192.168.101.1"
-       mac              = "52:54:00:a8:65:cb"
-       disk_size        = 50 * pow(2, 30)
-       network_name     = "headoffice"
-       adminpassword    = "password"
-       vncport          = 5934
-       }
-    "fs.ald.test"      = { 
-       ip               = "192.168.101.206"
-       gateway          = "192.168.101.1"
-       mac              = "52:54:00:a8:65:ce"
-       disk_size        = 50 * pow(2, 30)
-       network_name     = "headoffice"
-       adminpassword    = "password"
-       vncport          = 5935
-       }
-    "repo.ald.test"      = { 
-       ip               = "192.168.101.207"
-       gateway          = "192.168.101.1"
-       mac              = "52:54:00:a8:65:cf"
-       disk_size        = 50 * pow(2, 30)
-       network_name     = "headoffice"
-       adminpassword    = "password"
-       vncport          = 5936
-       }
-    "os.ald.test"      = { 
-       ip               = "10.11.0.203"
-       gateway          = "10.11.0.1"
-       mac              = "52:54:00:0b:00:cb"
-       disk_size        = 50 * pow(2, 30)
-       network_name     = "branch"
-       adminpassword    = "password"
-       vncport          = 5937
        }
   }
 
   # Список имен и конфигураций клиентских систем
   client_vm_config = {
-    "client1.ald.test"  = { 
-       ip               = "192.168.101.211"
-       gateway          = "192.168.101.1"
-       mac              = "52:54:00:a8:65:d3"
+    "exam-client.ald.company.lan"  = { 
+       ip               = "10.0.1.99"
+       gateway          = "10.0.1.1"
+       mac              = "08:00:27:47:b9:27"
        disk_size        = 50 * pow(2, 30)
-       network_name     = "headoffice"
-       adminpassword    = "password"
+       network_name     = "exam-net"
+       adminlogin       = "localadmin"
+       adminpassword    = "P@ssw0rd"
        vncport          = 5941
-
        }
-    "client2.ald.test"  = { 
-       ip               = "10.11.0.123"
-       gateway          = "10.11.0.1"
-       mac              = "52:54:00:0b:00:7b"
-       disk_size        = 50 * pow(2, 30)
-       network_name     = "branch"
-       adminpassword    = "password"
-       vncport          = 5942
-       }
-  }
+   }
   
   # Список имен и конфигураций виртуальных сетей
   net_config = {
-    "headoffice" = {
-      address         = "192.168.101.1"
+    "exam-net" = {
+      address         = "10.0.1.1"
       prefix          = 24
-      dhcprange_start = "192.168.101.128"
-      dhcprange_end   = "192.168.101.198"
-    }
-    "branch" = {
-      address         = "10.11.0.1"
-      prefix          = 24
-      dhcprange_start = "10.11.0.128"
-      dhcprange_end   = "10.11.0.198"
+      
+      dhcprange_start = "10.0.1.50"
+      dhcprange_end   = "10.0.1.198"
     }
   }
 
