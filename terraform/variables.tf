@@ -92,8 +92,6 @@ variable "net_config" {
   type = map(object({
     address         = string
     prefix          = number
-    dhcprange_start = string
-    dhcprange_end   = string
    }))
 }
 

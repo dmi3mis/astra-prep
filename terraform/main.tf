@@ -66,12 +66,6 @@ resource "libvirt_network" "networks" {
   ips = [{
     address   = each.value.address
     prefix    = each.value.prefix
-    dhcp = {
-      ranges  = [{
-        start = each.value.dhcprange_start
-        end   = each.value.dhcprange_end
-      }]
-    }
   }]
 }
 

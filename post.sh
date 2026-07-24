@@ -1,37 +1,22 @@
 #!/bin/bash
 
-# allow routing between two NAT virtual networks
-# https://serverfault.com/questions/1109903/libvirt-routing-between-two-nat-networks
-sudo mkdir -p /etc/libvirt/hooks
-sudo bash -c 'cat << EOF > /etc/libvirt/hooks/qemu
-#!/bin/bash
-/usr/sbin/iptables -F LIBVIRT_FWI
-/usr/sbin/iptables -F LIBVIRT_FWO
-/usr/sbin/iptables -A LIBVIRT_FWO -j ACCEPT
-/usr/sbin/iptables -A LIBVIRT_FWI -j ACCEPT
-/usr/sbin/iptables -t nat -I LIBVIRT_PRT -s 192.168.101.0/24 -d 10.11.0.0/24 -j RETURN
-/usr/sbin/iptables -t nat -I LIBVIRT_PRT -d 192.168.101.0/24 -s 10.11.0.0/24 -j RETURN
-EOF'
-
-sudo chmod a+rx /etc/libvirt/hooks/qemu
-sudo bash -c /etc/libvirt/hooks/qemu
-
-
 # Download and create qcow2 images of Windows 2019eval and Windows 10eval
 # https://github.com/dockur/windows/tree/master
+mkdir -p ~/win2019-win10
+cd ~/win2019-win10
 
 cat <<EOF > compose.yml
 name: win2019-win10
 services:
   ws1:
     image: dockurr/windows
-    container_name: ws1.msad.test
+    container_name: windc-1.win.company.lan
     environment:
       VERSION: "windows2019"
       CPU_CORES: "2"
       RAM_SIZE: "4G"
-      USERNAME: "sa"
-      PASSWORD: "password"
+      USERNAME: "localadmin"
+      PASSWORD: "P@ssw0rd"
       REMOVE: "N"
       DISK_FMT: "qcow2"
       DISK_SIZE: "128G"
@@ -45,18 +30,18 @@ services:
       - 3390:3389/tcp
       - 3390:3389/udp
     volumes:
-      - ${HOME}/storage-ws1:/storage
+      - ${HOME}/storage-windc-1:/storage
     restart: always
     stop_grace_period: 2m
   w10:
     image: dockurr/windows
-    container_name: w10.msad.test
+    container_name: winpc-1.win.company.lan
     environment:
       VERSION: "windows10e"
       CPU_CORES: "2"
       RAM_SIZE: "4G"
-      USERNAME: "sa"
-      PASSWORD: "password"
+      USERNAME: "localadmin"
+      PASSWORD: "P@ssw0rd"
       REMOVE: "N"
       DISK_FMT: "qcow2"
       DISK_SIZE: "128G"
@@ -70,7 +55,7 @@ services:
       - 3391:3389/tcp
       - 3391:3389/udp
     volumes:
-      - ${HOME}/storage-w10:/storage
+      - ${HOME}/storage-winpc-1:/storage
     restart: always
     stop_grace_period: 2m
 EOF
@@ -85,41 +70,46 @@ sleep 30m
 
 docker compose stop
 
-sudo chgrp libvirt-qemu -R /var/lib/libvirt/images/
-sudo chmod g+rwx -R /var/lib/libvirt/images
+
+cp ${HOME}/storage-windc-1/data.qcow2 /var/lib/libvirt/images/windc-1-data.qcow2
+cp ${HOME}/storage-winpc-1/data.qcow2 /var/lib/libvirt/images/winpc-1-data.qcow2
+
+sudo chgrp libvirt-qemu /var/lib/libvirt/images/win*.qcow2 
+sudo chmod g+rwx /var/lib/libvirt/images/win*.qcow2 
+
 
 virt-install \
- --name ws1.msad.test \
+ --name windc-1.win.company.lan \
  --ram 4096 \
  --vcpus 2 --cpu host-passthrough \
- --os-variant win2k22 \
+ --os-variant win2k19 \
  --install bootdev=hd,no_install=yes \
  --boot uefi \
- --disk path=${HOME}/storage-ws1/win2019-data.qcow2,bus=virtio,format=qcow2 \
- --network network=headoffice,model=virtio,mac="52:54:00:a8:65:d7" \
+ --disk path=/var/lib/libvirt/images/windc-1-data.qcow2,bus=virtio,format=qcow2 \
+ --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:d7" \
  --video virtio \
  --console pty,target.type=virtio \
- --graphics spice,port=5961,listen="0.0.0.0" \
+ --graphics spice
  --noautoconsole
 
 virt-install \
- --name w10.msad.test \
+ --name winpc-1.win.company.lan \
  --ram 4096 \
  --vcpus 2 --cpu host-passthrough \
  --os-variant win10 \
  --install bootdev=hd,no_install=yes \
  --boot uefi \
- --disk path=${HOME}/storage-w10/win10-data.qcow2,bus=virtio,format=qcow2 \
- --network network=headoffice,model=virtio,mac="52:54:00:a8:65:d8" \
+ --disk path=/var/lib/libvirt/images/winpc-1-data.qcow2,bus=virtio,format=qcow2 \
+ --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:d8" \
  --video virtio \
  --console pty,target.type=virtio \
- --graphics spice,port=5962,listen="0.0.0.0" \
+ --graphics spice
  --noautoconsole
 
 # Create 2 new and empty vms for tests with pxe
 
 virt-install \
- --name pxeboot-bios.ald.test \
+ --name pxeboot-bios.ald.company.lan \
  --ram 2046 \
  --vcpus 2 --cpu host-passthrough \
  --os-variant debian12 \
@@ -130,13 +120,13 @@ virt-install \
  --network network=branch,model=virtio,mac="52:54:00:a8:65:01" \
  --video virtio \
  --console pty,target.type=virtio \
- --graphics spice,port=5971,listen="0.0.0.0" \
+ --graphics spice
  --noautoconsole
 
 
 # create UEFI PXE boot VM with secureboot bisabled
 virt-install \
- --name pxeboot-uefi.ald.test \
+ --name pxeboot-uefi.ald.company.lan \
  --ram 2046 \
  --vcpus 2 --cpu host-passthrough \
  --os-variant debian12 \
@@ -156,10 +146,10 @@ rm /tmp/pxeboot-uefi.xml
 
 
 
-virsh shutdown ws1.msad.test
-virsh shutdown w10.msad.test
-virsh destroy pxeboot-bios.ald.test
-virsh destroy pxeboot-uefi.ald.test
+virsh shutdown windc-1.win.company.lan
+virsh shutdown winpc-1.win.company.lan
+virsh destroy pxeboot-bios.ald.company.lan
+virsh destroy pxeboot-uefi.ald.company.lan
 
 
 

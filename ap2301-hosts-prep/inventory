@@ -1,6 +1,0 @@
-[ap2301-hosts]
-host1.ald.test ansible_host=
-host2.ald.test ansible_host=
-host3.ald.test ansible_host=
-host4.ald.test ansible_host=
-host5.ald.test ansible_host=

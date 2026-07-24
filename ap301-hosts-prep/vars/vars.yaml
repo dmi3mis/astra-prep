@@ -1,0 +1,9 @@
+user: "astra"
+home_dir: "{{ ansible_facts.env.HOME }}"
+terraform_version: "1.13.5"
+terragrunt_version: "v0.93.8"
+
+alse_links:
+  - "https://registry.astralinux.ru/artifactory/mg-generic/alse/cloudinit/alse-gui-1.7.10-max-cloudinit-mg16.4.0-amd64.qcow2"
+  - "https://registry.astralinux.ru/artifactory/mg-generic/alse/cloudinit/alse-1.7.10-max-cloudinit-mg16.4.0-amd64.qcow2" 
+qcow2_dest: "/var/lib/libvirt/images/"

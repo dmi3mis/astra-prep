@@ -43,9 +43,6 @@ terraform.rc
 # Uncomment the line below if you want to ignore planout files.
 # planout
 
-./storage-w10/
-./storage-ws1/
-
 # Local tfvars terraform.tfvars
 **/*.tfvars
 

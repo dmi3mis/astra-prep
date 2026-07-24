@@ -1,0 +1,54 @@
+---
+- name: Скачивание файла контрольной суммы .md5
+  ansible.builtin.get_url:
+    url: "{{ item }}.md5"
+    dest: "/tmp/{{ item | basename }}.md5"
+    mode: '0644'
+  register: md5_file_download
+
+- name: Чтение ожидаемой MD5 из файла
+  ansible.builtin.slurp:
+    src: "/tmp/{{ item | basename }}.md5"
+  register: md5_content
+
+- name: Установка факта expected_md5
+  ansible.builtin.set_fact:
+    expected_md5: "{{ (md5_content.content | b64decode).split()[0] }}"
+
+- name: Проверка существования qcow2 образа
+  ansible.builtin.stat:
+    path: "{{ qcow2_dest }}/{{ item | basename }}"
+  register: qcow2_stat
+
+- name: Вычисление MD5 существующего qcow2 (если файл есть)
+  ansible.builtin.shell: "md5sum {{ qcow2_dest }}/{{ item | basename }} | awk '{print $1}'"
+  register: current_md5
+  when: qcow2_stat.stat.exists
+  ignore_errors: true
+
+- name: Удаление битого/неправильного qcow2 (если MD5 не совпадает)
+  ansible.builtin.file:
+    path: "{{ qcow2_dest }}/{{ item | basename }}"
+    state: absent
+  when:
+    - qcow2_stat.stat.exists
+    - current_md5.stdout is defined
+    - current_md5.stdout != expected_md5
+
+- name: Скачивание qcow2 образа с прогресс-баром (если файла нет или он был удалён)
+  ansible.builtin.shell: |
+    wget --show-progress -O {{ qcow2_dest }}/{{ item | basename }} {{ item }}
+  args:
+    executable: /bin/bash
+    creates: "{{ qcow2_dest }}/{{ item | basename }}"
+  register: download_result
+  when: not qcow2_stat.stat.exists or (qcow2_stat.stat.exists and current_md5.stdout != expected_md5)
+
+- name: Финальная проверка MD5 загруженного файла
+  ansible.builtin.shell: "md5sum {{ qcow2_dest }}/{{ item | basename }} | awk '{print $1}'"
+  register: final_md5
+
+- name: Валидация контрольной суммы
+  ansible.builtin.fail:
+    msg: "Ошибка: MD5 загруженного qcow2 не совпадает с ожидаемым (ожидалось: {{ expected_md5 }}, получено: {{ final_md5.stdout }})"
+  when: final_md5.stdout != expected_md5

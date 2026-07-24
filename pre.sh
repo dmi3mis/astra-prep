@@ -121,17 +121,21 @@ sudo usermod -a -G docker $USER
 
 
 sudo bash -c 'cat << EOF >> /etc/hosts
-192.168.101.201   dc01.ald.test     dc01
-192.168.101.202   dc02.ald.test     dc02
-10.11.0.201       dc03.ald.test     dc03
-192.168.101.211   client1.ald.test  client1
-10.11.0.202       dhcp.ald.test     dhcp
-192.168.101.205   ps.ald.test       ps
-192.168.101.210   monitor.ald.test  monitor
-192.168.101.203   log.ald.test      log
-192.168.101.206   fs.ald.test       fs
-192.168.101.207   repo.ald.test     repo
-10.11.0.203       os.ald.test       os
-192.168.101.215   ws1.msad.test     ws1
-192.168.101.216   w10.msad.test     w10
+10.0.1.11   dc-1.ald.company.lan         dc-1
+10.0.1.12   dc-2.ald.company.lan         dc-2
+10.0.1.51   pc-1.ald.company.lan         pc-1
+10.0.1.52   pc-2.ald.company.lan         pc-2
+10.0.1.26   file-1.ald.company.lan       file-1
+10.0.1.23   repo-1.ald.company.lan       repo-1
+10.0.1.25   cups-1.ald.company.lan       cups-1
+10.0.1.70   printer-1.ald.company.lan    printer-1
+10.0.1.30   dhcp-1.ald.company.lan       dhcp-1
+10.0.1.33   pxe-1.ald.company.lan        pxe-1
+10.0.1.21   monitoring-1.ald.company.lan monitoring-1
+10.0.1.22   audit-1.ald.company.lan      audit-1
+10.0.1.55   pc-5.ald.company.lan         pc-5
+10.0.1.56   pc-6.ald.company.lan         pc-6
+10.0.1.99   exam-client.ald.company.lan  exam-client
+10.0.1.101  windc-1.win.company.lan      windc-1
+10.0.1.102  winpc-1.win.company.lan      winpc-1
 EOF'

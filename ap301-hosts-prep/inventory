@@ -1,0 +1,2 @@
+[ap301_hosts]
+host1.ald.test ansible_host=localhost

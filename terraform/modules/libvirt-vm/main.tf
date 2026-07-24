@@ -23,7 +23,7 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
     manage_etc_hosts: true
     preserve_hostname: false
     bootcmd:
-      - echo nameserver 8.8.8.8 > /etc/resolv.conf
+      - echo nameserver 77.88.8.8 > /etc/resolv.conf
     runcmd:
       - systemctl restart networking
     users:
@@ -60,7 +60,7 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
     manage_resolv_conf: true
     resolv_conf:
       domain: ald.test
-      nameservers: [8.8.8.8, 8.8.4.4]
+      nameservers: [77.88.8.8, 77.88.8.1]
   EOF
   network_config = <<-EOF
     #network-config
@@ -74,7 +74,7 @@ resource "libvirt_cloudinit_disk" "cloudinit" {
         addresses:
           - ${var.ip}/${var.prefix}
         nameservers:
-          addresses: [8.8.8.8, 8.8.4.4]
+          addresses: [77.88.8.8, 77.88.8.1]
   EOF
 }
 

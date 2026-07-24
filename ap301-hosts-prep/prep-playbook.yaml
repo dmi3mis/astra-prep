@@ -10,10 +10,10 @@
 # ssh 192.168.50.159 sudo rsync -P alse-gui-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2 /var/lib/libvirt/images
 
 - name: Настройка удалённых компьютеров для курса AP2301
-  hosts: ap2301-hosts
+  hosts: ap301_hosts
   become: true
   vars_files:
-    - ./prep-vars.yaml
+    - ./vars/vars.yaml
   tasks:
 
     # 1. Настройка репозиториев Astra Linux
@@ -123,29 +123,7 @@
         mode: '0644'
       notify: Restart ssh
 
-
-    - name: Create libvirt hook to interconnect 2 nat networks
-      ansible.builtin.file:
-        path: /etc/libvirt/hooks
-        state: directory
-        recurse: true
-        owner: root
-        group: root
-
-    - name: Add sshd config
-      ansible.builtin.copy:
-        dest: /etc/libvirt/hooks/qemu
-        mode: "0755"
-        content: |
-          #!/bin/bash
-          iptables -F LIBVIRT_FWI
-          iptables -F LIBVIRT_FWO
-          iptables -A LIBVIRT_FWI -j ACCEPT
-          iptables -A LIBVIRT_FWO -j ACCEPT
-          iptables -t nat -I LIBVIRT_PRT -s 192.168.101.0/24 -d 10.11.0.0/24 -j RETURN
-          iptables -t nat -I LIBVIRT_PRT -d 192.168.101.0/24 -s 10.11.0.0/24 -j RETURN
-
-    # 12.  ---- Настройка Tuned для производительности виртуализации ----
+    # 7.  ---- Настройка Tuned для производительности виртуализации ----
     - name: Проверка установки пакета tuned-ppd
       ansible.builtin.command: dpkg-query -W tuned-ppd
       register: tuned_ppd_pkg
@@ -175,96 +153,32 @@
         state: started
         enabled: true
 
-    # 12. Предварительная загрузка qcow2 образа
-    # ---- Блок загрузки qcow2 с проверкой MD5 и прогресс-баром ----
-    - name: Скачивание файла контрольной суммы .md5
-      ansible.builtin.get_url:
-        url: "{{ qcow2_url }}.md5"
-        dest: "/tmp/qcow2.md5"
-        mode: '0644'
-      register: md5_file_download
+    - name: Загрузка и проверка каждого qcow2 образа
+      include_tasks: tasks/download_qcow2.yml
+      with_items: "{{ alse_links }}"
 
-    - name: Чтение ожидаемой MD5 из файла
-      ansible.builtin.slurp:
-        src: "/tmp/qcow2.md5"
-      register: md5_content
-
-    - name: Установка факта expected_md5 (первое слово в файле)
-      ansible.builtin.set_fact:
-        expected_md5: "{{ (md5_content.content | b64decode).split()[0] }}"
-
-    - name: Проверка существования qcow2 образа
-      ansible.builtin.stat:
-        path: "{{ qcow2_dest }}"
-      register: qcow2_stat
-
-    - name: Вычисление MD5 существующего qcow2 (если файл есть)
-      ansible.builtin.shell: "md5sum {{ qcow2_dest }} | awk '{print $1}'"
-      register: current_md5
-      when: qcow2_stat.stat.exists
-      ignore_errors: true
-
-    - name: Удаление битого/неправильного qcow2 (если MD5 не совпадает)
-      ansible.builtin.file:
-        path: "{{ qcow2_dest }}"
-        state: absent
-      when:
-        - qcow2_stat.stat.exists
-        - current_md5.stdout is defined
-        - current_md5.stdout != expected_md5
-
-    - name: Скачивание qcow2 образа с прогресс-баром (если файла нет или он был удалён)
-      ansible.builtin.shell: |
-        wget --show-progress -O {{ qcow2_dest }} {{ qcow2_url }}
-      args:
-        executable: /bin/bash
-        creates: "{{ qcow2_dest }}"   # не скачивает повторно, если файл появился (но после удаления его нет)
-      register: download_result
-      when: not qcow2_stat.stat.exists or (qcow2_stat.stat.exists and current_md5.stdout != expected_md5)
-
-    - name: Финальная проверка MD5 загруженного файла
-      ansible.builtin.shell: "md5sum {{ qcow2_dest }} | awk '{print $1}'"
-      register: final_md5
-
-    - name: Валидация контрольной суммы
-      ansible.builtin.fail:
-        msg: "Ошибка: MD5 загруженного qcow2 не совпадает с ожидаемым (ожидалось: {{ expected_md5 }}, получено: {{ final_md5.stdout }})"
-      when: final_md5.stdout != expected_md5
-
-    - name: Изменение владельца образа для группы libvirt-qemu
-      ansible.builtin.file:
-        path: /var/lib/libvirt/images
-        state: directory
-        owner: root
-        group: libvirt-qemu
-        recurse: true
-
-    - name: Изменение владельца образа для группы libvirt-qemu
-      ansible.builtin.file:
-        path: /var/lib/libvirt/images
-        state: directory
-        owner: root
-        group: libvirt-qemu
-        recurse: true
-
-    # 12. Добавление статических записей в /etc/hosts
+    # 9. Добавление статических записей в /etc/hosts
     - name: Добавление записей в /etc/hosts
       ansible.builtin.blockinfile:
         path: /etc/hosts
         block: |
-          192.168.101.201   dc01.ald.test     dc01
-          192.168.101.202   dc02.ald.test     dc02
-          10.11.0.201       dc03.ald.test     dc03
-          192.168.101.211   client1.ald.test  client1
-          10.11.0.202       dhcp.ald.test     dhcp
-          192.168.101.205   ps.ald.test       ps
-          192.168.101.210   monitor.ald.test  monitor
-          192.168.101.203   log.ald.test      log
-          192.168.101.206   fs.ald.test       fs
-          192.168.101.207   repo.ald.test     repo
-          10.11.0.203       os.ald.test       os
-          192.168.101.215   ws1.msad.test     ws1
-          192.168.101.216   w10.msad.test     w10
+          10.0.1.11   dc-1.ald.company.lan         dc-1
+          10.0.1.12   dc-2.ald.company.lan         dc-2
+          10.0.1.51   pc-1.ald.company.lan         pc-1
+          10.0.1.52   pc-2.ald.company.lan         pc-2
+          10.0.1.26   file-1.ald.company.lan       file-1
+          10.0.1.23   repo-1.ald.company.lan       repo-1
+          10.0.1.25   cups-1.ald.company.lan       cups-1
+          10.0.1.70   printer-1.ald.company.lan    printer-1
+          10.0.1.30   dhcp-1.ald.company.lan       dhcp-1
+          10.0.1.33   pxe-1.ald.company.lan        pxe-1
+          10.0.1.21   monitoring-1.ald.company.lan monitoring-1
+          10.0.1.22   audit-1.ald.company.lan      audit-1
+          10.0.1.55   pc-5.ald.company.lan         pc-5
+          10.0.1.56   pc-6.ald.company.lan         pc-6
+          10.0.1.99   exam-client.ald.company.lan  exam-client
+          10.0.1.101  windc-1.win.company.lan      windc-1
+          10.0.1.102  winpc-1.win.company.lan      winpc-1
         marker: "# {mark} ANSIBLE MANAGED BLOCK - ASTRA HOSTS"
         insertafter: EOF
         state: present
@@ -277,12 +191,12 @@
 
 
 - name: Установка terragrunt и terraform
-  hosts: ap2301-hosts
+  hosts: ap301_hosts
   become: false
   vars_files:
-    - ./prep-vars.yaml
+    - ./vars/vars.yaml
   tasks:
-    # 8. Настройка PATH и переменной LIBVIRT_DEFAULT_URI в .bashrc
+    # 10. Настройка PATH и переменной LIBVIRT_DEFAULT_URI в .bashrc
     - name: Добавление ~/.local/bin в PATH
       ansible.builtin.lineinfile:
         path: "{{ home_dir }}/.bashrc"
