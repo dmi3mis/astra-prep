@@ -11,7 +11,7 @@
 export DEBIAN_FRONTEND="noninteractive"
 
 
-# Мы будем использовать Astra Linux SE Орёл 1.8.4
+# Мы будем использовать в качестве хоста Astra Linux SE Орёл 1.8.4
 
 cat  <<'EOF' |sudo tee /etc/apt/sources.list
 deb https://download.astralinux.ru/astra/frozen/1.8_x86-64/1.8.4/repository-extended/ 1.8_x86-64 main contrib non-free non-free-firmware
