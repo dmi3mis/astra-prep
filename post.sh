@@ -71,11 +71,11 @@ sleep 30m
 docker compose stop
 
 
-cp ${HOME}/storage-windc-1/data.qcow2 /var/lib/libvirt/images/windc-1-data.qcow2
-cp ${HOME}/storage-winpc-1/data.qcow2 /var/lib/libvirt/images/winpc-1-data.qcow2
+sudo cp ${HOME}/storage-windc-1/data.qcow2 /var/lib/libvirt/images/windc-1-data.qcow2
+sudo cp ${HOME}/storage-winpc-1/data.qcow2 /var/lib/libvirt/images/winpc-1-data.qcow2
 
-sudo chgrp libvirt-qemu /var/lib/libvirt/images/win*.qcow2 
-sudo chmod g+rwx /var/lib/libvirt/images/win*.qcow2 
+sudo chgrp libvirt-qemu -R /var/lib/libvirt/images/
+sudo chmod g+rwx -R /var/lib/libvirt/images/
 
 
 virt-install \
@@ -89,7 +89,7 @@ virt-install \
  --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:d7" \
  --video virtio \
  --console pty,target.type=virtio \
- --graphics spice
+ --graphics spice \
  --noautoconsole
 
 virt-install \
@@ -103,7 +103,7 @@ virt-install \
  --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:d8" \
  --video virtio \
  --console pty,target.type=virtio \
- --graphics spice
+ --graphics spice \
  --noautoconsole
 
 # Create 2 new and empty vms for tests with pxe
