@@ -117,7 +117,7 @@ virt-install \
  --pxe \
  --boot bootmenu.enable=on,hd,network \
  --disk path=/var/lib/libvirt/images/pxeboot-bios.qcow2,size=50,bus=virtio,format=qcow2 \
- --network network=branch,model=virtio,mac="52:54:00:a8:65:01" \
+ --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:01" \
  --video virtio \
  --console pty,target.type=virtio \
  --graphics spice
@@ -134,7 +134,7 @@ virt-install \
  --pxe \
  --install bootdev=net,no_install=yes \
  --disk path=/var/lib/libvirt/images/pxeboot-uefi.qcow2,size=50,bus=virtio,format=qcow2 \
- --network network=branch,model=virtio,mac="52:54:00:a8:65:02" \
+ --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:02" \
  --video virtio \
  --console pty,target.type=virtio \
  --noautoconsole --print-xml > /tmp/pxeboot-uefi.xml
