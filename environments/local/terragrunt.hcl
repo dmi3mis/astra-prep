@@ -23,20 +23,15 @@ locals {
   # https://www.aldpro.ru/professional/ALD_Pro_Module_02/ALD_Pro_deployment.html#aldpro-compatibility
 
   image_urls = {
-    debian12_local         = "/var/lib/libvirt/images/debian-12-genericcloud-amd64.qcow2"
-    debian12_link          = "https://cdimage.debian.org/images/cloud/bookworm/latest/debian-12-genericcloud-amd64.qcow2"
-     
-    alse178_local          = "/var/lib/libvirt/images/alse-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2"
-    alse178_link           = "https://registry.astralinux.ru/artifactory/mg-generic/alse/cloudinit/alse-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2"
-    alse178_gui_local      = "/var/lib/libvirt/images/alse-gui-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2"
-    alse178_gui_link       = "https://registry.astralinux.ru/artifactory/mg-generic/alse/cloudinit/alse-gui-1.7.8-max-cloudinit-mg15.8.2-amd64.qcow2"
-    alse1710_gui_local      = "/var/lib/libvirt/images/alse-gui-1.7.10-max-cloudinit-mg16.2.0-amd64.qcow2"
+    alse1710_local         = "/var/lib/libvirt/images/alse-1.7.10-max-cloudinit-mg16.4.0-amd64.qcow2"
+    alse1710_link          = "https://registry.astralinux.ru/artifactory/mg-generic/alse/cloudinit/alse-1.7.10-max-cloudinit-mg16.4.0-amd64.qcow2"
+    alse1710_gui_local     = "/var/lib/libvirt/images/alse-gui-1.7.10-max-cloudinit-mg16.4.0-amd64.qcow2"
     alse1710_gui_link      = "https://registry.astralinux.ru/artifactory/mg-generic/alse/cloudinit/alse-gui-1.7.10-max-cloudinit-mg16.2.0-amd64.qcow2"
     }
   
-
+ 
 }
-
+ 
 # Параметры для local
 inputs = {
 
@@ -50,12 +45,12 @@ inputs = {
 
 
   # Образ ОС DC замените на путь к вашему образу, список приведён выше
-  # образ должен быть в формате qcow2 и включать поддержку cloud-init
-  dcimage_url        = "${local.image_urls["alse1710_gui_local"]}"
-  roleimage_url      = "${local.image_urls["alse1710_gui_local"]}"
+  # образ должен быть в формате qcow2 и включать поддержку cloud-init 
+  dcimage_url        = "${local.image_urls["alse1710_local"]}"
+  roleimage_url      = "${local.image_urls["alse1710_local"]}"
   clientimage_url    = "${local.image_urls["alse1710_gui_local"]}"
 
-  # Enviroment name
+# Enviroment name
   environment         = "local"
   libvirt_uri         = "qemu:///system"
   
