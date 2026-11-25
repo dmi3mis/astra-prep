@@ -88,6 +88,7 @@ virt-install \
  --disk path=/var/lib/libvirt/images/windc-1-data.qcow2,bus=virtio,format=qcow2 \
  --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:d7" \
  --video qlx \
+ --channel spicevmc \
  --console pty,target.type=virtio \
  --graphics spice \
  --noautoconsole
@@ -102,6 +103,7 @@ virt-install \
  --disk path=/var/lib/libvirt/images/winpc-1-data.qcow2,bus=virtio,format=qcow2 \
  --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:d8" \
  --video qlx \
+ --channel spicevmc \
  --console pty,target.type=virtio \
  --graphics spice \
  --noautoconsole
