@@ -87,7 +87,7 @@ virt-install \
  --boot uefi \
  --disk path=/var/lib/libvirt/images/windc-1-data.qcow2,bus=virtio,format=qcow2 \
  --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:d7" \
- --video virtio \
+ --video qlx \
  --console pty,target.type=virtio \
  --graphics spice \
  --noautoconsole
@@ -101,7 +101,7 @@ virt-install \
  --boot uefi \
  --disk path=/var/lib/libvirt/images/winpc-1-data.qcow2,bus=virtio,format=qcow2 \
  --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:d8" \
- --video virtio \
+ --video qlx \
  --console pty,target.type=virtio \
  --graphics spice \
  --noautoconsole
@@ -118,7 +118,7 @@ virt-install \
  --boot bootmenu.enable=on,hd,network \
  --disk path=/var/lib/libvirt/images/pxeboot-bios.qcow2,size=50,bus=virtio,format=qcow2 \
  --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:01" \
- --video virtio \
+ --video qlx \
  --console pty,target.type=virtio \
  --graphics spice
  --noautoconsole
@@ -135,21 +135,10 @@ virt-install \
  --install bootdev=net,no_install=yes \
  --disk path=/var/lib/libvirt/images/pxeboot-uefi.qcow2,size=50,bus=virtio,format=qcow2 \
  --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:02" \
- --video virtio \
+ --video qlx \
  --console pty,target.type=virtio \
  --noautoconsole --print-xml > /tmp/pxeboot-uefi.xml
 
 sed -i 's/secure=yes/secure=no/g' /tmp/pxeboot-uefi.xml
 virsh define /tmp/pxeboot-uefi.xml
 rm /tmp/pxeboot-uefi.xml
-
-
-
-
-virsh shutdown windc-1.win.company.lan
-virsh shutdown winpc-1.win.company.lan
-virsh destroy pxeboot-bios.ald.company.lan
-virsh destroy pxeboot-uefi.ald.company.lan
-
-
-
