@@ -87,7 +87,7 @@ virt-install \
  --boot uefi \
  --disk path=/var/lib/libvirt/images/windc-1-data.qcow2,bus=virtio,format=qcow2 \
  --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:d7" \
- --video qlx \
+ --video qxl \
  --channel spicevmc \
  --console pty,target.type=virtio \
  --graphics spice \
@@ -102,7 +102,7 @@ virt-install \
  --boot uefi \
  --disk path=/var/lib/libvirt/images/winpc-1-data.qcow2,bus=virtio,format=qcow2 \
  --network network=ap301-net,model=virtio,mac="52:54:00:a8:65:d8" \
- --video qlx \
+ --video qxl \
  --channel spicevmc \
  --console pty,target.type=virtio \
  --graphics spice \
